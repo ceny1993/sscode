@@ -64,6 +64,24 @@
             <version>1.6.8</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.springframework/spring-tx -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>4.3.6.RELEASE</version>
+        </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/org.springframework/spring-orm -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <version>4.3.6.RELEASE</version>
+        </dependency>
+
+
+
+
         <dependency>
             <groupId>org.apache.geronimo.bundles</groupId>
             <artifactId>aspectjweaver</artifactId>

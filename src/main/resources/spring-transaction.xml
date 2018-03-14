@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+
+    <!--基于TransactionInterceptor的声明式事务-->
+    <bean id="transactionInterceptor"
+          class="org.springframework.transaction.interceptor.TransactionInterceptor">
+        <property name="transactionManager" ref="transactionManager"/>
+        <property name="transactionAttributes">
+            <props>
+                <prop key="transfer">PROPAGATION_REQUIRED</prop>
+            </props>
+        </property>
+    </bean>
+    <bean id="bankServiceTarget"
+          class="footmark.spring.core.tx.declare.origin.BankServiceImpl">
+        <property name="bankDao" ref="bankDao"/>
+    </bean>
+    <bean id="bankService"
+          class="org.springframework.aop.framework.ProxyFactoryBean">
+        <property name="target" ref="bankServiceTarget"/>
+        <property name="interceptorNames">
+            <list>
+                <idref bean="transactionInterceptor"/>
+            </list>
+        </property>
+    </bean>
+
+
+    <!--改进版本，用于将TransactionInterceptor 和 ProxyFactoryBean 的配置合二为一-->
+    <bean id="bankServiceTarget"
+          class="footmark.spring.core.tx.declare.classic.BankServiceImpl">
+        <property name="bankDao" ref="bankDao"/>
+    </bean>
+    <bean id="bankService"
+          class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+        <property name="target" ref="bankServiceTarget"/>
+        <property name="transactionManager" ref="transactionManager"/>
+        <property name="transactionAttributes">
+            <props>
+                <prop key="transfer">PROPAGATION_REQUIRED</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!--************分割线**************-->
+
+    <!--基于 <tx> 命名空间的声明式事务管理-->
+    <bean id="bankService"
+          class="footmark.spring.core.tx.declare.namespace.BankServiceImpl">
+        <property name="bankDao" ref="bankDao"/>
+    </bean>
+    <tx:advice id="bankAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="transfer" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <aop:config>
+        <aop:pointcut id="bankPointcut" expression="execution(* *.transfer(..))"/>
+        <aop:advisor advice-ref="bankAdvice" pointcut-ref="bankPointcut"/>
+    </aop:config>
+
+    <!--改进版本-->
+    <!--另外，如果配置的事务管理器 Bean 的名字取值为“transactionManager”，则我们可以省略 <tx:advice> 的 transaction-manager 属性，因为该属性的默认值即为“transactionManager”。-->
+    <bean id="bankService"
+          class="footmark.spring.core.tx.declare.namespace.BankServiceImpl">
+        <property name="bankDao" ref="bankDao"/>
+    </bean>
+    <tx:advice id="bankAdvice" transaction-manager="transactionManager">
+    <aop:config>
+        <aop:pointcut id="bankPointcut" expression="execution(**.transfer(..))"/>
+        <aop:advisor advice-ref="bankAdvice" pointcut-ref="bankPointcut"/>
+    </aop:config>
+
+
+
+    <!--************分割线**************-->
+
+    <!--基于注解的声明式事务-->
+    <!--与前面相似，transaction-manager 属性的默认值是 transactionManager，如果事务管理器 Bean 的名字即为该值，则可以省略该属性。-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+</beans>
